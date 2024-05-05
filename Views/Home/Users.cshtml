@@ -1,0 +1,137 @@
+﻿@using Task4DataBase.Models;
+@{
+    ViewData["Title"] = "Home Page";
+    Layout = ViewBag.Header;
+}
+
+@model List<User>
+@{
+    List<int> selectedusers = new List<int>();
+    <div onload="updateButtonsState();" class="container" onloadeddata="updateButtonsState()">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="toolbar mb-3">
+                    <input type="submit" id="deleteButton" class="btn btn-danger" value="Delete" onclick="deleteSelected()">
+                    <input type="submit" id="blockButton" class="btn btn-warning" value="Block" onclick="blockSelected()">
+                    <input type="submit" id="unblockButton" class="btn btn-success" value="Unblock" onclick="unblockSelected()">
+                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll" onclick="selectAll()"></th>
+                                <th>Id</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Registration Date</th>
+                                <th>Last Login Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                            if (ViewBag.Users != null)
+                            {
+                                            @foreach (var user in ViewBag.Users as List<User>)
+                                {
+                                                <tr>
+                                                    <td><input type="checkbox" value="@user.Id" class="selectUser"></td>
+                                                    <td>@user.Id</td>
+                                                    <td>@user.Name</td>
+                                                    <td>@user.Email</td>
+                                                    <td>@user.RegistrationDate</td>
+                                                    <td>@user.LastLoginDate</td>
+                                                    <td>@(user.IsBlocked ? "Blocked" : "Active")</td>
+                                                </tr>
+                                }
+                            }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    @section Scripts {
+        <script>
+            function selectAll() {
+                var checkboxes = document.getElementsByClassName("selectUser");
+                var selectAllCheckbox = document.getElementById("selectAll");
+                for (var i = 0; i < checkboxes.length; i++) {
+                    checkboxes[i].checked = selectAllCheckbox.checked;
+                }
+                updateButtonsState();
+            }
+
+            function updateButtonsState() {
+                var checkboxes = document.getElementsByClassName("selectUser");
+                var deleteButton = document.getElementById("deleteButton");
+                var blockButton = document.getElementById("blockButton");
+                var unblockButton = document.getElementById("unblockButton");
+
+                var anyChecked = false;
+                for (var i = 0; i < checkboxes.length; i++) {
+                    if (checkboxes[i].checked) {
+                        anyChecked = true;
+                        break;
+                    }
+                }
+
+                deleteButton.disabled = !anyChecked;
+                blockButton.disabled = !anyChecked;
+                unblockButton.disabled = !anyChecked;
+            }
+
+            function deleteSelected() {
+                var selectedUsers = getSelectedUsers();
+                // Отправить список выбранных пользователей на сервер
+                sendSelectedUsers(selectedUsers, 'delete');
+            }
+
+            function blockSelected() {
+                var selectedUsers = getSelectedUsers();
+                // Отправить список выбранных пользователей на сервер
+                sendSelectedUsers(selectedUsers, 'block');
+            }
+
+            function unblockSelected() {
+                var selectedUsers = getSelectedUsers();
+                // Отправить список выбранных пользователей на сервер
+                sendSelectedUsers(selectedUsers, 'unblock');
+            }
+
+            function getSelectedUsers() {
+                var checkboxes = document.getElementsByClassName("selectUser");
+                var selectedUsers = [];
+                for (var i = 0; i < checkboxes.length; i++) {
+                    if (checkboxes[i].checked) {
+                        selectedUsers.push(checkboxes[i].value);
+                    }
+                }
+                return selectedUsers;
+            }
+
+            function sendSelectedUsers(selectedUsers, action) {
+                if (selectedUsers.length > 0) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/Home/' + action, true);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            location.reload();
+                        }
+                    };
+                    xhr.send(JSON.stringify(selectedUsers));
+                }
+            }
+
+            // Добавляем обработчик событий для каждого чек-бокса
+            var checkboxes = document.getElementsByClassName("selectUser");
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].addEventListener('change', function () {
+                    updateButtonsState();
+                });
+            }
+        </script>
+    }
+}
+
+
